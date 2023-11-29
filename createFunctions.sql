@@ -129,3 +129,35 @@ BEGIN
 END;
 //
 DELIMITER ;
+
+DROP FUNCTION IF EXISTS `isUserLoggedIn`;
+DELIMITER  //
+CREATE FUNCTION isUserLoggedIn(userId BINARY(16)) RETURNS BOOLEAN
+BEGIN
+    DECLARE lastLoginTime TIMESTAMP;
+    DECLARE lastLogoutTime TIMESTAMP;
+
+    SELECT MAX(actionTime) INTO lastLoginTime
+    FROM UserActions
+    WHERE userId = userId AND actionType = 2;
+
+    SELECT MAX(actionTime) INTO lastLogoutTime
+    FROM UserActions
+    WHERE userId = userId AND actionType = 3;
+
+    RETURN lastLoginTime > COALESCE(lastLogoutTime, '1970-01-01');
+END;
+//
+DELIMITER ;
+
+DROP FUNCTION IF EXISTS `getLastUserStatistic`;
+DELIMITER //
+CREATE PROCEDURE getLastUserStatistic(IN userId_arg BINARY(16))
+BEGIN
+    SELECT *
+    FROM UserStatistics
+    WHERE userId = userId_arg
+    ORDER BY statisticsTime DESC
+    LIMIT 1;
+END //
+DELIMITER ;
